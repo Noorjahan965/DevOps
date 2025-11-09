@@ -1,0 +1,36 @@
+# File: azure-pipelines.yml
+
+trigger:
+- main   # Automatically run the pipeline when you push to main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Step 1: Checkout code
+- task: Checkout@1
+
+# Step 2: Setup Java 17 (you can change to 11 if needed)
+- task: UseJavaVersion@1
+  inputs:
+    versionSpec: '17'
+    jdkArchitecture: 'x64'
+
+# Step 3: Cache Maven dependencies (speeds up future builds)
+- task: Cache@2
+  inputs:
+    key: 'maven | "$(Agent.OS)" | **/pom.xml'
+    restoreKeys: |
+      maven | "$(Agent.OS)"
+    path: ~/.m2/repository
+
+# Step 4: Build your Maven project
+- script: mvn clean package
+  displayName: 'Build with Maven'
+
+# Step 5: Publish build artifacts (your JAR/WAR file)
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'target'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
